@@ -2,52 +2,153 @@
 <html>
 <head>
     <title>AI Career Guidance</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            resize: none;
+            font-size: 14px;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        .section {
+            margin-top: 30px;
+        }
+
+        .card {
+            background: #f9fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .skill {
+            display: inline-block;
+            padding: 6px 12px;
+            margin: 4px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        .matched {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .missing {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .course {
+            margin-bottom: 8px;
+        }
+
+        .job-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #34495e;
+        }
+    </style>
 </head>
 <body>
+
+<div class="container">
     <h1>AI Career Guidance System</h1>
 
     <form method="POST">
-        <textarea name="resume" rows="8" cols="60"
+        <textarea name="resume" rows="8"
             placeholder="Paste your resume text here..."></textarea>
-        <br><br>
-        <button type="submit">Analyze</button>
+        <br>
+        <button type="submit">Analyze Resume</button>
     </form>
 
     {% if result %}
-        <h2>Recommended Job: {{ result.job }}</h2>
+        <div class="section">
+            <div class="job-title">
+                Recommended Job: {{ result.job }}
+            </div>
+        </div>
 
-        <h3>Matched Skills:</h3>
-        <ul>
-            {% for skill in result.matched %}
-                <li>{{ skill }}</li>
+        <div class="section">
+            <h3>Matched Skills</h3>
+            <div class="card">
+                {% for skill in result.matched %}
+                    <span class="skill matched">{{ skill }}</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>Missing Skills</h3>
+            <div class="card">
+                {% for skill in result.missing %}
+                    <span class="skill missing">{{ skill }}</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>Recommended Courses</h3>
+
+            {% for skill, courses in result.courses.items() %}
+                <div class="card">
+                    <strong>To improve {{ skill }}:</strong>
+                    <ul>
+                        {% if courses %}
+                            {% for course in courses %}
+                                <li class="course">
+                                    {{ course.course }}
+                                    ({{ course.rating }}, {{ course.level }})
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                            <li>No direct courses found.</li>
+                        {% endif %}
+                    </ul>
+                </div>
             {% endfor %}
-        </ul>
+        </div>
 
-        <h3>Missing Skills:</h3>
-        <ul>
-            {% for skill in result.missing %}
-                <li>{{ skill }}</li>
-            {% endfor %}
-        </ul>
-
-        <h3>Recommended Courses:</h3>
-
-        {% for skill, courses in result.courses.items() %}
-            <h4>To improve {{ skill }}:</h4>
-            <ul>
-                {% if courses %}
-                    {% for course in courses %}
-                        <li>
-                            {{ course.course }} 
-                            (Rating: {{ course.rating }}, Level: {{ course.level }})
-                        </li>
-                    {% endfor %}
-                {% else %}
-                    <li>No direct courses found.</li>
-                {% endif %}
-            </ul>
-        {% endfor %}
     {% endif %}
+</div>
 
 </body>
 </html>
