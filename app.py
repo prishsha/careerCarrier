@@ -7,8 +7,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 app = Flask(__name__)
 
 # loading the data
-jobs_df = pd.read_csv("data/raw/data.csv")
-courses_df = pd.read_csv("data/raw/Coursera.csv")
+jobs_df = pd.read_csv("data/data.csv")
+courses_df = pd.read_csv("data/Coursera.csv")
 
 # clean the test
 def clean_text(text):
