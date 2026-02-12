@@ -90,10 +90,13 @@ def home():
         matched = resume_skills.intersection(job_skills)
         missing = job_skills.difference(resume_skills)
 
+        course_recommendations = recommend_courses(missing, courses_df)
+
         result = {
             "job": best_job,
             "matched": matched,
-            "missing": missing
+            "missing": missing,
+            "courses": course_recommendations 
         }
 
     return render_template("index.html", result=result)
