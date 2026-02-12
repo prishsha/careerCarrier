@@ -10,11 +10,24 @@ app = Flask(__name__)
 jobs_df = pd.read_csv("data/data.csv")
 courses_df = pd.read_csv("data/Coursera.csv")
 
-# clean the test
+# clean job description dataset
 def clean_text(text):
     text = text.lower()
     text = re.sub(r'[^a-z\s]', '', text)
     return text
+
+#clean coursera dataset
+def clean_course_skills(skill_string):
+    if pd.isna(skill_string):
+        return []
+    
+    skill_string = skill_string.strip('{}')
+    skills = skill_string.split(',')
+    cleaned = [s.replace('"', '').strip().lower() for s in skills]
+    return cleaned
+
+courses_df['skills_list'] = courses_df['skills'].apply(clean_course_skills)
+
 
 jobs_df['clean_description'] = jobs_df['Description'].apply(clean_text)
 
@@ -35,6 +48,25 @@ def extract_skills(text):
         if skill in text:
             found.add(skill)
     return found
+
+def recommend_courses(missing_skills, courses_df, top_n=2):
+    recommendations = {}
+    
+    for skill in missing_skills:
+        matched_courses = []
+        
+        for _, row in courses_df.iterrows():
+            if any(skill in course_skill for course_skill in row['skills_list']):
+                matched_courses.append(row)
+        
+        if matched_courses:
+            matched_df = pd.DataFrame(matched_courses)
+            matched_df = matched_df.sort_values(by='rating', ascending=False)
+            recommendations[skill] = matched_df[['course', 'rating', 'level']].head(top_n).to_dict(orient='records')
+        else:
+            recommendations[skill] = []
+    
+    return recommendations
 
 # route
 @app.route("/", methods=["GET", "POST"])

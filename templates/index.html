@@ -1,34 +1,17 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>AI Career Guidance</title>
-</head>
-<body>
-    <h1>AI Career Guidance System</h1>
+<h3>Recommended Courses:</h3>
 
-    <form method="POST">
-        <textarea name="resume" rows="8" cols="60"
-            placeholder="Paste your resume text here..."></textarea>
-        <br><br>
-        <button type="submit">Analyze</button>
-    </form>
-
-    {% if result %}
-        <h2>Recommended Job: {{ result.job }}</h2>
-
-        <h3>Matched Skills:</h3>
-        <ul>
-            {% for skill in result.matched %}
-                <li>{{ skill }}</li>
+{% for skill, courses in result.courses.items() %}
+    <h4>To improve {{ skill }}:</h4>
+    <ul>
+        {% if courses %}
+            {% for course in courses %}
+                <li>
+                    {{ course.course }} 
+                    (Rating: {{ course.rating }}, Level: {{ course.level }})
+                </li>
             {% endfor %}
-        </ul>
-
-        <h3>Missing Skills:</h3>
-        <ul>
-            {% for skill in result.missing %}
-                <li>{{ skill }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-</body>
-</html>
+        {% else %}
+            <li>No direct courses found.</li>
+        {% endif %}
+    </ul>
+{% endfor %}
