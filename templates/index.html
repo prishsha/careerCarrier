@@ -103,25 +103,47 @@
     {% if result %}
         <div class="section">
             <div class="job-title">
-                Recommended Job: {{ result.job }}
+                Recommended Job: {{ result.job }} ({{ result.score }}% match)
+            </div>
+            {% if result.note %}
+                <p style="color:#b35c00;"><strong>Note:</strong> {{ result.note }}</p>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h3>Top Matches</h3>
+            <div class="card">
+                <ul>
+                    {% for match in result.top_matches %}
+                        <li>{{ match.job }} ({{ match.score }}%)</li>
+                    {% endfor %}
+                </ul>
             </div>
         </div>
 
         <div class="section">
             <h3>Matched Skills</h3>
             <div class="card">
-                {% for skill in result.matched %}
-                    <span class="skill matched">{{ skill }}</span>
-                {% endfor %}
+                {% if result.matched %}
+                    {% for skill in result.matched %}
+                        <span class="skill matched">{{ skill }}</span>
+                    {% endfor %}
+                {% else %}
+                    <p>No direct matched skills detected from the current skill map.</p>
+                {% endif %}
             </div>
         </div>
 
         <div class="section">
             <h3>Missing Skills</h3>
             <div class="card">
-                {% for skill in result.missing %}
-                    <span class="skill missing">{{ skill }}</span>
-                {% endfor %}
+                {% if result.missing %}
+                    {% for skill in result.missing %}
+                        <span class="skill missing">{{ skill }}</span>
+                    {% endfor %}
+                {% else %}
+                    <p>No major skill gaps were detected for this top match.</p>
+                {% endif %}
             </div>
         </div>
 
