@@ -115,6 +115,7 @@ def rank_jobs(resume_text, top_n=5):
     return scored[:top_n], resume_skills
 
 
+
 def normalize_course_skills(skills_list):
     mapped = set()
     joined = " ".join(skills_list)
@@ -150,7 +151,10 @@ def home():
 
     if request.method == "POST":
         resume_text = request.form["resume"]
+
+        # Rank jobs + extract resume skills
         ranked_jobs, resume_skills = rank_jobs(resume_text, top_n=5)
+
         top_index, top_score = ranked_jobs[0]
         best_job = jobs_df.iloc[top_index]["Job Title"]
         best_job_skills = jobs_df.iloc[top_index]["skills"]
@@ -158,7 +162,26 @@ def home():
         matched = resume_skills.intersection(best_job_skills)
         missing = best_job_skills.difference(resume_skills)
 
+        # Guardrail: detect non-technical or weak resumes
+        note = None
+        if len(resume_skills) <= 1:
+            note = (
+                "Your resume contains very few technical keywords. "
+                "Add tools like Python, SQL, Excel, Power BI, or Data Analysis "
+                "to receive more accurate career recommendations."
+            )
+
+        # Low confidence warning 
+        elif top_score < MIN_CONFIDENCE_SCORE:
+            note = (
+                "Low-confidence match. Add more role-specific skills/tools "
+                "to improve recommendation quality."
+            )
+
+        # Generate course recommendations
         course_recommendations = recommend_courses(missing, courses_df)
+
+        # Build ranked job preview list
         top_matches = [
             {
                 "job": jobs_df.iloc[idx]["Job Title"],
@@ -166,12 +189,6 @@ def home():
             }
             for idx, score in ranked_jobs
         ]
-        note = None
-        if top_score < MIN_CONFIDENCE_SCORE:
-            note = (
-                "Low-confidence match. Add more role-specific skills/tools in the resume text "
-                "to improve recommendation quality."
-            )
 
         result = {
             "job": best_job,
