@@ -1,140 +1,40 @@
-import re
-from collections import defaultdict
-
-import pandas as pd
 from flask import Flask, render_template, request
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from collections import defaultdict
+import pandas as pd
+
+from preprocess import load_and_combine_courses
+from data_processing import (
+    build_job_pipeline,
+    extract_skills_light
+)
 
 app = Flask(__name__)
 MIN_CONFIDENCE_SCORE = 0.18
 
 # ================================
-# LOAD DATA
+# LOAD JOB DATA + BUILD PIPELINE
 # ================================
 jobs_df = pd.read_csv("data/data.csv")
-courses_df = pd.read_csv("data/Coursera.csv")
 
-# ================================
-# SKILL VOCABULARY
-# ================================
-SKILL_VOCAB = [
-    "python", "sql", "excel", "power bi", "tableau",
-    "data analysis", "data visualization", "statistics",
-    "etl", "machine learning", "deep learning",
-    "data engineering", "data pipeline", "big data",
-    "hadoop", "spark", "gis", "mapping", "cartography",
-    "automation", "algorithms", "routing",
-    "database management", "data validation",
-    "kpi tracking", "business intelligence",
-    "communication", "reporting"
-]
-
-# ================================
-# TEXT CLEANING
-# ================================
-def clean_text(text):
-    if not isinstance(text, str):
-        text = "" if pd.isna(text) else str(text)
-    text = text.lower()
-    text = re.sub(r"[^a-z0-9\s]", " ", text)
-    text = re.sub(r"\s+", " ", text).strip()
-    return text
-
-# ================================
-# TF-IDF SKILL EXTRACTOR (LIGHTWEIGHT)
-# ================================
-skill_vectorizer = TfidfVectorizer().fit(SKILL_VOCAB)
-skill_matrix = skill_vectorizer.transform(SKILL_VOCAB)
-
-def extract_skills_light(text, threshold=0.3):
-    if not isinstance(text, str) or not text.strip():
-        return set()
-
-    text = clean_text(text)
-    text_vec = skill_vectorizer.transform([text])
-
-    similarities = cosine_similarity(text_vec, skill_matrix)[0]
-
-    detected_skills = {
-        SKILL_VOCAB[i]
-        for i, score in enumerate(similarities)
-        if score >= threshold
-    }
-
-    return detected_skills
-
-# ================================
-# CLEAN COURSE DATA
-# ================================
-def clean_course_skills(skill_string):
-    if pd.isna(skill_string):
-        return []
-    skill_string = skill_string.strip("{}")
-    skills = skill_string.split(",")
-    return [clean_text(s.replace('"', "").strip()) for s in skills]
-
-courses_df["skills_list"] = courses_df["skills"].apply(clean_course_skills)
-
-courses_df["rating"] = pd.to_numeric(
-    courses_df["rating"], errors="coerce"
-).fillna(0.0)
-
-courses_df["reviewcount_num"] = (
-    courses_df["reviewcount"]
-    .astype(str)
-    .str.lower()
-    .str.replace(",", "", regex=False)
-    .str.replace("k", "000", regex=False)
-    .str.extract(r"(\d+)", expand=False)
-    .fillna("0")
-    .astype(int)
+jobs_df, desc_vectorizer, title_vectorizer, desc_matrix, title_matrix = (
+    build_job_pipeline(jobs_df)
 )
 
 # ================================
-# PREPROCESS JOB DATA
+# LOAD COURSES
 # ================================
-jobs_df["Job Title"] = jobs_df["Job Title"].fillna("")
-jobs_df["Description"] = jobs_df["Description"].fillna("")
-
-jobs_df["clean_title"] = jobs_df["Job Title"].apply(clean_text)
-jobs_df["clean_description"] = jobs_df["Description"].apply(clean_text)
-
-jobs_df["combined_text"] = (
-    jobs_df["clean_title"] + " " + jobs_df["clean_description"]
-)
-
-# Apply lightweight skill extraction
-jobs_df["skills"] = jobs_df["combined_text"].apply(extract_skills_light)
-
-# ================================
-# TF-IDF FOR JOB RANKING
-# ================================
-desc_vectorizer = TfidfVectorizer(
-    max_features=3000,
-    ngram_range=(1, 2),
-    stop_words="english"
-)
-
-title_vectorizer = TfidfVectorizer(
-    max_features=1000,
-    ngram_range=(1, 2),
-    stop_words="english"
-)
-
-desc_matrix = desc_vectorizer.fit_transform(jobs_df["clean_description"])
-title_matrix = title_vectorizer.fit_transform(jobs_df["clean_title"])
+courses_df = load_and_combine_courses("data")
 
 # ================================
 # JOB RANKING
 # ================================
 def rank_jobs(resume_text, top_n=5):
-    clean_resume = clean_text(resume_text)
 
-    resume_skills = extract_skills_light(clean_resume)
+    resume_skills = extract_skills_light(resume_text)
 
-    resume_desc_vector = desc_vectorizer.transform([clean_resume])
-    resume_title_vector = title_vectorizer.transform([clean_resume])
+    resume_desc_vector = desc_vectorizer.transform([resume_text])
+    resume_title_vector = title_vectorizer.transform([resume_text])
 
     desc_scores = cosine_similarity(resume_desc_vector, desc_matrix)[0]
     title_scores = cosine_similarity(resume_title_vector, title_matrix)[0]
@@ -145,10 +45,7 @@ def rank_jobs(resume_text, top_n=5):
         job_skills = row["skills"]
 
         if job_skills:
-            overlap = (
-                len(resume_skills.intersection(job_skills)) /
-                len(job_skills)
-            )
+            overlap = len(resume_skills.intersection(job_skills)) / len(job_skills)
         else:
             overlap = 0.0
 
@@ -161,7 +58,6 @@ def rank_jobs(resume_text, top_n=5):
         scored.append((idx, final_score))
 
     scored.sort(key=lambda x: x[1], reverse=True)
-
     return scored[:top_n], resume_skills
 
 # ================================
@@ -172,9 +68,7 @@ def recommend_courses(missing_skills, courses_df, top_n=2):
 
     for skill in missing_skills:
         matched_df = courses_df[
-            courses_df["skills_list"].apply(
-                lambda x: any(skill in s for s in x)
-            )
+            courses_df["skills"].apply(lambda x: skill in str(x).lower())
         ].copy()
 
         if matched_df.empty:
@@ -182,12 +76,12 @@ def recommend_courses(missing_skills, courses_df, top_n=2):
             continue
 
         matched_df = matched_df.sort_values(
-            by=["rating", "reviewcount_num"],
+            by=["rating", "reviewcount"],
             ascending=[False, False]
         )
 
         recommendations[skill] = (
-            matched_df[["course", "rating", "level"]]
+            matched_df[["course", "rating", "level", "platform"]]
             .head(top_n)
             .to_dict(orient="records")
         )
@@ -195,7 +89,7 @@ def recommend_courses(missing_skills, courses_df, top_n=2):
     return recommendations
 
 # ================================
-# FLASK ROUTE
+# ROUTE
 # ================================
 @app.route("/", methods=["GET", "POST"])
 def home():
@@ -205,7 +99,6 @@ def home():
         resume_text = request.form["resume"]
 
         ranked_jobs, resume_skills = rank_jobs(resume_text)
-
         top_index, top_score = ranked_jobs[0]
 
         best_job = jobs_df.iloc[top_index]["Job Title"]
@@ -214,9 +107,7 @@ def home():
         matched = resume_skills.intersection(best_job_skills)
         missing = best_job_skills.difference(resume_skills)
 
-        course_recommendations = recommend_courses(
-            missing, courses_df
-        )
+        course_recommendations = recommend_courses(missing, courses_df)
 
         top_matches = [
             {
@@ -226,21 +117,13 @@ def home():
             for idx, score in ranked_jobs
         ]
 
-        note = None
-        if top_score < MIN_CONFIDENCE_SCORE:
-            note = (
-                "Low-confidence match. Add more role-specific skills/tools "
-                "to improve recommendation quality."
-            )
-
         result = {
             "job": best_job,
             "score": round(top_score * 100, 1),
             "matched": sorted(matched),
             "missing": sorted(missing),
             "courses": dict(course_recommendations),
-            "top_matches": top_matches,
-            "note": note,
+            "top_matches": top_matches
         }
 
     return render_template("index.html", result=result)

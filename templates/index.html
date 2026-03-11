@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>AI Career Guidance</title>
     <style>
@@ -16,7 +17,7 @@
             background: white;
             padding: 30px;
             border-radius: 12px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
         }
 
         h1 {
@@ -88,25 +89,25 @@
         }
     </style>
 </head>
+
 <body>
 
-<div class="container">
-    <h1>AI Career Guidance System</h1>
+    <div class="container">
+        <h1>AI Career Guidance System</h1>
 
-    <form method="POST">
-        <textarea name="resume" rows="8"
-            placeholder="Paste your resume text here..."></textarea>
-        <br>
-        <button type="submit">Analyze Resume</button>
-    </form>
+        <form method="POST">
+            <textarea name="resume" rows="8" placeholder="Paste your resume text here..."></textarea>
+            <br>
+            <button type="submit">Analyze Resume</button>
+        </form>
 
-    {% if result %}
+        {% if result %}
         <div class="section">
             <div class="job-title">
                 Recommended Job: {{ result.job }} ({{ result.score }}% match)
             </div>
             {% if result.note %}
-                <p style="color:#b35c00;"><strong>Note:</strong> {{ result.note }}</p>
+            <p style="color:#b35c00;"><strong>Note:</strong> {{ result.note }}</p>
             {% endif %}
         </div>
 
@@ -115,7 +116,7 @@
             <div class="card">
                 <ul>
                     {% for match in result.top_matches %}
-                        <li>{{ match.job }} ({{ match.score }}%)</li>
+                    <li>{{ match.job }} ({{ match.score }}%)</li>
                     {% endfor %}
                 </ul>
             </div>
@@ -125,11 +126,11 @@
             <h3>Matched Skills</h3>
             <div class="card">
                 {% if result.matched %}
-                    {% for skill in result.matched %}
-                        <span class="skill matched">{{ skill }}</span>
-                    {% endfor %}
+                {% for skill in result.matched %}
+                <span class="skill matched">{{ skill }}</span>
+                {% endfor %}
                 {% else %}
-                    <p>No direct matched skills detected from the current skill map.</p>
+                <p>No direct matched skills detected from the current skill map.</p>
                 {% endif %}
             </div>
         </div>
@@ -138,11 +139,11 @@
             <h3>Missing Skills</h3>
             <div class="card">
                 {% if result.missing %}
-                    {% for skill in result.missing %}
-                        <span class="skill missing">{{ skill }}</span>
-                    {% endfor %}
+                {% for skill in result.missing %}
+                <span class="skill missing">{{ skill }}</span>
+                {% endfor %}
                 {% else %}
-                    <p>No major skill gaps were detected for this top match.</p>
+                <p>No major skill gaps were detected for this top match.</p>
                 {% endif %}
             </div>
         </div>
@@ -151,26 +152,28 @@
             <h3>Recommended Courses</h3>
 
             {% for skill, courses in result.courses.items() %}
-                <div class="card">
-                    <strong>To improve {{ skill }}:</strong>
-                    <ul>
-                        {% if courses %}
-                            {% for course in courses %}
-                                <li class="course">
-                                    {{ course.course }}
-                                    ({{ course.rating }}, {{ course.level }})
-                                </li>
-                            {% endfor %}
-                        {% else %}
-                            <li>No direct courses found.</li>
-                        {% endif %}
-                    </ul>
-                </div>
+            <div class="card">
+                <strong>To improve {{ skill }}:</strong>
+                <ul>
+                    {% if courses %}
+                    {% for course in courses %}
+                    <li>
+                        <strong>{{ course.course }}</strong><br>
+                        ⭐ {{ course.rating }} | {{ course.level }} |
+                        <span style="color:#2b6cb0;">{{ course.platform }}</span>
+                    </li>
+                    {% endfor %}
+                    {% else %}
+                    <li>No direct courses found.</li>
+                    {% endif %}
+                </ul>
+            </div>
             {% endfor %}
         </div>
 
-    {% endif %}
-</div>
+        {% endif %}
+    </div>
 
 </body>
+
 </html>
