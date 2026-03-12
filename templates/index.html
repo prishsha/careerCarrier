@@ -1,91 +1,153 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <title>AI Career Guidance</title>
+    <meta charset="UTF-8">
+    <title>Career Intelligence Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f9;
             margin: 0;
-            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: #e2e8f0;
         }
 
         .container {
-            max-width: 800px;
-            margin: 50px auto;
-            background: white;
+            max-width: 1100px;
+            margin: 40px auto;
             padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
         }
 
         h1 {
             text-align: center;
-            color: #2c3e50;
+            font-weight: 700;
+            font-size: 32px;
+            margin-bottom: 30px;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            margin-bottom: 25px;
         }
 
         textarea {
             width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 12px;
+            border: none;
+            background: #0f172a;
+            color: #e2e8f0;
             resize: none;
             font-size: 14px;
         }
 
+        textarea:focus {
+            outline: 2px solid #6366f1;
+        }
+
         button {
-            background: #4CAF50;
-            color: white;
-            padding: 12px 20px;
+            margin-top: 15px;
+            padding: 12px 22px;
+            border-radius: 10px;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
-            margin-top: 10px;
+            background: linear-gradient(135deg, #6366f1, #3b82f6);
+            color: white;
+            transition: 0.3s ease;
         }
 
         button:hover {
-            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
         }
 
-        .section {
-            margin-top: 30px;
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
         }
 
-        .card {
-            background: #f9fafc;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 10px;
+        .job-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .score-bar {
+            height: 10px;
+            background: #334155;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .score-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e, #3b82f6);
         }
 
         .skill {
             display: inline-block;
             padding: 6px 12px;
-            margin: 4px;
+            margin: 5px 5px 0 0;
             border-radius: 20px;
-            font-size: 13px;
+            font-size: 12px;
+            font-weight: 500;
         }
 
         .matched {
-            background: #d4edda;
-            color: #155724;
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            border: 1px solid #22c55e;
         }
 
         .missing {
-            background: #f8d7da;
-            color: #721c24;
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid #ef4444;
         }
 
-        .course {
-            margin-bottom: 8px;
+        .course-card {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 12px;
+            transition: 0.3s ease;
         }
 
-        .job-title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #34495e;
+        .course-card:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .platform {
+            display: inline-block;
+            padding: 4px 8px;
+            font-size: 11px;
+            border-radius: 8px;
+            background: #1e40af;
+            margin-top: 5px;
+        }
+
+        .top-match-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #334155;
+        }
+
+        .top-match-item:last-child {
+            border-bottom: none;
+        }
+
+        @media (max-width: 900px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -93,85 +155,103 @@
 <body>
 
     <div class="container">
-        <h1>AI Career Guidance System</h1>
 
-        <form method="POST">
-            <textarea name="resume" rows="8" placeholder="Paste your resume text here..."></textarea>
-            <br>
-            <button type="submit">Analyze Resume</button>
-        </form>
+        <h1> Career Intelligence Dashboard</h1>
+
+        <div class="glass">
+            <form method="POST">
+                <textarea name="resume" rows="8" placeholder="Paste your resume here..."></textarea>
+                <button type="submit">Analyze Resume</button>
+            </form>
+        </div>
 
         {% if result %}
-        <div class="section">
+
+        <!-- Recommended Job -->
+        <div class="glass">
             <div class="job-title">
-                Recommended Job: {{ result.job }} ({{ result.score }}% match)
+                🎯 Recommended Role: {{ result.job }}
             </div>
-            {% if result.note %}
-            <p style="color:#b35c00;"><strong>Note:</strong> {{ result.note }}</p>
-            {% endif %}
-        </div>
+            <div>{{ result.score }}% Match</div>
 
-        <div class="section">
-            <h3>Top Matches</h3>
-            <div class="card">
-                <ul>
-                    {% for match in result.top_matches %}
-                    <li>{{ match.job }} ({{ match.score }}%)</li>
-                    {% endfor %}
-                </ul>
+            <div class="score-bar">
+                <div class="score-fill" style="width: {{ result.score }}%;"></div>
             </div>
         </div>
 
-        <div class="section">
-            <h3>Matched Skills</h3>
-            <div class="card">
+        <!-- Top Matches -->
+        <div class="glass">
+            <h3>📊 Top Role Matches</h3>
+            {% for match in result.top_matches %}
+            <div class="top-match-item">
+                {{ match.job }} — {{ match.score }}%
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="grid">
+
+            <!-- Matched Skills -->
+            <div class="glass">
+                <h3>✅ Strengths</h3>
                 {% if result.matched %}
                 {% for skill in result.matched %}
                 <span class="skill matched">{{ skill }}</span>
                 {% endfor %}
                 {% else %}
-                <p>No direct matched skills detected from the current skill map.</p>
+                <p>No direct matched skills detected.</p>
                 {% endif %}
             </div>
-        </div>
 
-        <div class="section">
-            <h3>Missing Skills</h3>
-            <div class="card">
+            <!-- Missing Skills -->
+            <div class="glass">
+                <h3>⚠ Skill Gaps</h3>
                 {% if result.missing %}
                 {% for skill in result.missing %}
                 <span class="skill missing">{{ skill }}</span>
                 {% endfor %}
                 {% else %}
-                <p>No major skill gaps were detected for this top match.</p>
+                <p>No major gaps detected.</p>
                 {% endif %}
             </div>
+
         </div>
 
-        <div class="section">
-            <h3>Recommended Courses</h3>
+        <!-- Courses -->
+        <div class="glass">
+            <h3>🎓 Recommended Learning Paths</h3>
 
             {% for skill, courses in result.courses.items() %}
-            <div class="card">
+            <div style="margin-top:20px;">
                 <strong>To improve {{ skill }}:</strong>
-                <ul>
-                    {% if courses %}
-                    {% for course in courses %}
-                    <li>
-                        <strong>{{ course.course }}</strong><br>
-                        ⭐ {{ course.rating }} | {{ course.level }} |
-                        <span style="color:#2b6cb0;">{{ course.platform }}</span>
-                    </li>
-                    {% endfor %}
+
+                {% if courses %}
+                {% for course in courses %}
+                <div class="course-card">
+                    <strong>{{ course.course }}</strong><br>
+
+                    ⭐
+                    {% if course.rating and course.rating > 0 %}
+                    {{ course.rating }}
                     {% else %}
-                    <li>No direct courses found.</li>
+                    NA
                     {% endif %}
-                </ul>
+
+                    | {{ course.level }}<br>
+
+                    <span class="platform">{{ course.platform }}</span>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p>No direct courses found.</p>
+                {% endif %}
             </div>
             {% endfor %}
+
         </div>
 
         {% endif %}
+
     </div>
 
 </body>
