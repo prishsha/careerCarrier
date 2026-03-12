@@ -26,6 +26,8 @@ jobs_df, desc_vectorizer, title_vectorizer, desc_matrix, title_matrix = (
 # ================================
 courses_df = load_and_combine_courses("data")
 
+print(courses_df.groupby("platform").size())
+
 # ================================
 # JOB RANKING
 # ================================
@@ -63,10 +65,11 @@ def rank_jobs(resume_text, top_n=5):
 # ================================
 # COURSE RECOMMENDATION
 # ================================
-def recommend_courses(missing_skills, courses_df, top_n=2):
+def recommend_courses(missing_skills, courses_df, top_n=3):
     recommendations = defaultdict(list)
 
     for skill in missing_skills:
+
         matched_df = courses_df[
             courses_df["skills"].apply(lambda x: skill in str(x).lower())
         ].copy()
@@ -80,8 +83,15 @@ def recommend_courses(missing_skills, courses_df, top_n=2):
             ascending=[False, False]
         )
 
+        # Take best from each platform
+        diversified = (
+            matched_df
+            .groupby("platform", group_keys=False)
+            .head(1)
+        )
+
         recommendations[skill] = (
-            matched_df[["course", "rating", "level", "platform"]]
+            diversified
             .head(top_n)
             .to_dict(orient="records")
         )
@@ -108,7 +118,6 @@ def home():
         missing = best_job_skills.difference(resume_skills)
 
         course_recommendations = recommend_courses(missing, courses_df)
-
         top_matches = [
             {
                 "job": jobs_df.iloc[idx]["Job Title"],
